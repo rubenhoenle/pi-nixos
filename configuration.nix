@@ -1,4 +1,7 @@
-{ config, pkgs, lib, ... }:
+{ pkgs, lib, ... }:
+let
+  ssh-key = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIPsnp3qCYwCpb49UptuZ8csHzIZzZr0Buyl7uVW9udFdAAAABHNzaDo=";
+in
 {
   # NixOS wants to enable GRUB by default
   boot.loader.grub.enable = false;
@@ -29,42 +32,29 @@
     };
   };
 
-  # !!! Adding a swap file is optional, but strongly recommended!
   swapDevices = [{ device = "/swapfile"; size = 2048; }];
 
-  # systemPackages
   environment.systemPackages = with pkgs; [
     vim
     curl
     wget
-    nano
-    bind
+    git
+    htop
   ];
 
   services.openssh = {
     enable = true;
+    ports = [ 22 ];
+    openFirewall = true;
+
+    /* allow root login for remote deploy aka. rebuild-switch  */
+    settings.AllowUsers = [ "ruben" "root" ];
     settings.PermitRootLogin = "yes";
+
+    /* require public key authentication for better security */
+    settings.PasswordAuthentication = false;
+    settings.KbdInteractiveAuthentication = false;
   };
-
-  # services.openvpn = {
-  #     # You can set openvpn connection
-  #     servers = {
-  #       privateVPN = {
-  #         config = "config /home/nixos/vpn/privatvpn.conf";
-  #       };
-  #     };
-  # };
-
-  programs.zsh = {
-    enable = true;
-    ohMyZsh = {
-      enable = true;
-      theme = "bira";
-    };
-  };
-
-
-  networking.firewall.enable = false;
 
 
   # WiFi
@@ -72,8 +62,10 @@
     enableRedistributableFirmware = true;
     firmware = [ pkgs.wireless-regdb ];
   };
-  # Networking
+
   networking = {
+    firewall.enable = false;
+
     # useDHCP = true;
     interfaces.wlan0 = {
       useDHCP = false;
@@ -113,8 +105,6 @@
     "net.ipv4.tcp_ecn" = true;
   };
 
-  # put your own configuration here, for example ssh keys:
-  users.defaultUserShell = pkgs.zsh;
   users.mutableUsers = true;
   users.groups = {
     ruben = {
@@ -129,15 +119,11 @@
       isNormalUser = true;
       name = "ruben";
       group = "ruben";
-      shell = pkgs.zsh;
       extraGroups = [ "wheel" ];
     };
   };
-  users.users.root.openssh.authorizedKeys.keys = [
-    "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIPsnp3qCYwCpb49UptuZ8csHzIZzZr0Buyl7uVW9udFdAAAABHNzaDo="
-  ];
-  users.users.ruben.openssh.authorizedKeys.keys = [
-    "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIPsnp3qCYwCpb49UptuZ8csHzIZzZr0Buyl7uVW9udFdAAAABHNzaDo="
-  ];
+  users.users.root.openssh.authorizedKeys.keys = [ ssh-key ];
+  users.users.ruben.openssh.authorizedKeys.keys = [ ssh-key ];
+
   system.stateVersion = "23.05";
 }

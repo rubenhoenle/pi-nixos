@@ -1,6 +1,6 @@
 { pkgs, lib, ... }:
 let
-  ssh-key = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIPsnp3qCYwCpb49UptuZ8csHzIZzZr0Buyl7uVW9udFdAAAABHNzaDo=";
+  ssh-key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPk1h1lfFRthXiIA8UtWc5P5UmwZ2JjWiRv748Syx3jL";
 in
 {
   # NixOS wants to enable GRUB by default
@@ -48,7 +48,7 @@ in
     openFirewall = true;
 
     /* allow root login for remote deploy aka. rebuild-switch  */
-    settings.AllowUsers = [ "ruben" "root" ];
+    settings.AllowUsers = [ "sezuisa" "root" ];
     settings.PermitRootLogin = "yes";
 
     /* require public key authentication for better security */
@@ -68,12 +68,12 @@ in
 
     # useDHCP = true;
     interfaces.wlan0 = {
-      useDHCP = false;
-      ipv4.addresses = [{
-        # I used static IP over WLAN because I want to use it as local DNS resolver
-        address = "192.168.1.4";
-        prefixLength = 24;
-      }];
+      useDHCP = true;
+      #ipv4.addresses = [{
+      # I used static IP over WLAN because I want to use it as local DNS resolver
+      #address = "192.168.1.4";
+      #prefixLength = 24;
+      #}];
     };
     interfaces.eth0 = {
       useDHCP = true;
@@ -107,23 +107,23 @@ in
 
   users.mutableUsers = true;
   users.groups = {
-    ruben = {
+    sezuisa = {
       gid = 1000;
-      name = "ruben";
+      name = "sezuisa";
     };
   };
   users.users = {
-    ruben = {
+    sezuisa = {
       uid = 1000;
-      home = "/home/ruben";
+      home = "/home/sezuisa";
       isNormalUser = true;
-      name = "ruben";
-      group = "ruben";
+      name = "sezuisa";
+      group = "sezuisa";
       extraGroups = [ "wheel" ];
     };
   };
   users.users.root.openssh.authorizedKeys.keys = [ ssh-key ];
-  users.users.ruben.openssh.authorizedKeys.keys = [ ssh-key ];
+  users.users.sezuisa.openssh.authorizedKeys.keys = [ ssh-key ];
 
-  system.stateVersion = "23.05";
+  system.stateVersion = "24.05";
 }
